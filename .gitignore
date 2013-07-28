@@ -8,6 +8,7 @@ lib/bundler/man
 pkg
 rdoc
 spec/reports
+*api_keys.rb
 test/tmp
 test/version_tmp
 tmp
@@ -16,3 +17,4 @@ tmp
 .yardoc
 _yardoc
 doc/
+*.DS_Store
