@@ -1,92 +1,65 @@
 require 'spec_helper'
 
-describe TradekingApi::Client do
-
-  # describe "client initialization" do
-  # 
-  #   it 'should not initialize without a consumer_key and consumer_secret' do
-  #     lambda { TradekingApi::Client.new() }.should raise_error
-  #   end
-  # 
-  #   it 'should initialize with a valid consumer_key and consumer_secret' do
-  #     lambda { 
-  #       TradekingApi::Client.new({
-  #         consumer_key: CONSUMER_KEY, 
-  #         consumer_secret: CONSUMER_SECRET
-  #       })
-  #     }.should_not raise_error
-  #   end
-  # end
-  # 
-  # describe ".access_token" do
-  # 
-  #   it 'should not get valid access token with invalid consumer' do
-  #     lambda { 
-  #       client = TradekingApi::Client.new({
-  #           consumer_key: 'BADTOKEN', 
-  #           consumer_secret: 'BADSECRET'
-  #           access_token:  OAUTH_TOKEN,
-  #           access_secret: OAUTH_SECRET
-  #         })
-  #       client.access_token(@consumer, OAUTH_TOKEN, OAUTH_SECRET)
-  #     }.should raise_error
-  #   end
-  # 
-  #   it 'should initialize with a valid consumer_key and consumer_secret' do
-  #     lambda { TradekingApi::Client.new(CONSUMER_KEY, CONSUMER_SECRET) }.should_not raise_error
-  #   end
-  #end
+describe TradeKing::Client do
   describe ".new" do
-    let(:client){
-       TradekingApi::Client.new({
-          consumer_token: CONSUMER_TOKEN,
-          consumer_secret: CONSUMER_SECRET
-        })
-    }
-  
-    it 'should be valid' do
-      lambda { client }.should_not raise_error
+    describe "valid consumer" do
+      let(:client){
+         TradeKing::Client.new({
+            consumer_key: TRADEKING_CONSUMER_KEY,
+            consumer_secret: TRADEKING_CONSUMER_SECRET
+          })
+      }
+      it 'should be valid' do
+        lambda { client }.should_not raise_error
+      end
+
+      it 'should have valid consumer' do
+        client.consumer.should_not be_nil
+        client.consumer.key.should == TRADEKING_CONSUMER_KEY
+        client.consumer.secret.should == TRADEKING_CONSUMER_SECRET
+        client.consumer.options[:signature_method].should == "HMAC-SHA1"
+        client.consumer.options[:oauth_version].should == "1.0"
+        client.consumer.options[:site].should == "https://api.tradeking.com"
+      end
     end
 
-    it 'should have valid consumer' do
-      client.consumer.should_not be_nil
-      client.consumer.key.should == CONSUMER_TOKEN
-      client.consumer.secret.should == CONSUMER_SECRET
-      client.consumer.options[:signature_method].should == "HMAC-SHA1"
-      client.consumer.options[:oauth_version].should == "1.0"
-      client.consumer.options[:site].should == "https://api.tradeking.com"
+    describe "invalid consumer" do
+      let(:client){
+         TradeKing::Client.new({
+            consumer_key: '',
+            consumer_secret: ''
+          })
+      }
+      it 'should be valid' do
+        lambda { client }.should raise_error
+      end
     end
   end
   
   describe ".update" do
     let(:client){
-      TradekingApi::Client.new({
-        consumer_token: CONSUMER_TOKEN,
-        consumer_secret: CONSUMER_SECRET
+      TradeKing::Client.new({
+        consumer_key: TRADEKING_CONSUMER_KEY,
+        consumer_secret: TRADEKING_CONSUMER_SECRET
       })
     }
   
     it 'should be valid' do
       lambda {
-        client.update({
-           access_token: ACCESS_TOKEN,
-           access_secret: ACCESS_SECRET
+        client.authorize({
+           oauth_token: TRADEKING_OAUTH_TOKEN,
+           oauth_secret: TRADEKING_OAUTH_SECRET
          })
       }.should_not raise_error
     end
 
     it 'should have valid token' do
-      client.update({
-        access_token: ACCESS_TOKEN,
-        access_secret: ACCESS_SECRET
+      client.authorize({
+        oauth_token: TRADEKING_OAUTH_TOKEN,
+        oauth_secret: TRADEKING_OAUTH_SECRET
       })
-      puts client.token.inspect
-      # client.consumer.should_not be_nil
-      # client.consumer.key.should == CONSUMER_TOKEN
-      # client.consumer.secret.should == CONSUMER_SECRET
-      # client.consumer.options[:signature_method].should == "HMAC-SHA1"
-      # client.consumer.options[:oauth_version].should == "1.0"
-      # client.consumer.options[:site].should == "https://api.tradeking.com"
+      client.token.token.should_not be_nil
+      client.token.secret.should_not be_nil
     end
   end
 end

@@ -1,58 +1,54 @@
 module TradeKing
-  class Watchlist
-  
-    attr_accessor :id, :options, :client
+  class Watchlist < Request
 
-    def initialize(client, options={})
-      response = self.class.create(client, options)
-      @client = client
+    PATH = "watchlists"
+    attr_accessor :id, :options, :client, :path, :lists, :items, :request_path
+    #has_many :symbols
+
+    def initialize(options={})
+      @id = options['id'] if options['id'].present?
+      @items = options['items'].present? ? options['items'].map{|item| TradeKing::WatchlistItem.new(item) } : []
+      @client = options['client']
     end
     
-    # Instance Methods
-    
-    def add(options={})
-      self.class.add_symbol(@client, id, options={})
+    class << self
+      attr_accessor :request_path
+    end
+
+    def add(symbols=[])
+      url = "watchlists/#{self.id}/symbols"
+      request = TradeKing::Request.new(resource: self.class, client: client)
+      request.collection_from_response(:post, url, {symbols: symbols})
     end
     
     def delete(symbol)
-      self.class.delete_symbol(@client, id, symbol)
+      url = "watchlists/#{self.id}/symbols/#{symbol}"
+      request = TradeKing::Request.new(resource: self.class, client: client)
+      request.collection_from_response(:delete, url, {})
     end
-    
-    # Class Methods
-    
-    def self.list(client)
-      return client.get('/v1/watchlists.json')["watchlists"].map do | watchlist |
-        self.class.show(client, watchlist['watchlist']['id'])
+
+    def destroy
+      delete(self.id)
+    end
+
+    def self.parse_object(options={})
+      if !!(options['watchlists']['watchlist']['watchlistitem'] rescue false)
+        {'id' => self.request_path.last, 'items' => options['watchlists']['watchlist']['watchlistitem']}
+      elsif !!(options['watchlists']['watchlist'] rescue false)
+        options['watchlists']['watchlist']
+      else
+        options
       end
     end
     
-    def self.create(client, options={})
-      raise ArgumentError, "You must supply a watchlist id" unless options[:id]
-      options[:id] = options[:id].to_slug
-      @id = optios[:id]
-      params = options.filter([:id,:symbols]).to_params
-      return client.post("/v1/watchlists.json?#{params}")
-    end
-    
-    def self.show(client, id)
-      raise ArgumentError, "You must supply a watchlist id" unless id
-      return client.get("/v1/watchlists/#{id}.json")
-    end
-    
-    def self.delete(client, id)
-      raise ArgumentError, "You must supply a watchlist id" unless id
-      return client.delete("/v1/watchlists/#{id}.json")
-    end
-
-    def add_symbol(client, id, options={})
-      raise ArgumentError, "You must supply an array of symbols" unless options[:symbols] && options[:symbols].is_a?(Array)
-      params = options.filter([:symbols]).to_params
-      return client.post("/v1/watchlists/#{id}/symbols.json?#{params}")
-    end
-    
-    def delete_symbol(client, id, symbol)
-      raise ArgumentError, "You must supply a symbol" unless symbol
-      return client.delete("/v1/watchlists/#{id}/symbols/#{symbol}.json?#{params}")
+    def self.parse_collection(options={})
+      collection = []
+      if options['watchlists'].present?
+        options['watchlists']['watchlist'].each do |list|
+          collection.push({list[0] => list[1]})
+        end
+      end
+      return collection
     end
   end
 end
