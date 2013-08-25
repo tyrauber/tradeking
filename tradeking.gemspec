@@ -23,6 +23,11 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'tzinfo'
   spec.add_runtime_dependency "rest-client"
   spec.add_runtime_dependency "hpricot"
+  # spec.add_runtime_dependency 'em-http-request'
+  # spec.add_runtime_dependency 'simple_oauth'
+  # spec.add_runtime_dependency 'yajl-ruby'
+  # spec.add_runtime_dependency  'yajl-ruby'
+  # spec.add_runtime_dependency 'simple_oauth'
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"

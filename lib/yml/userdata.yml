@@ -1,0 +1,36 @@
+userdata:
+  account:
+    account:
+      _type: integer
+    fundtrading:
+      _type: boolean
+    ira:
+      _type: boolean
+    margintrading:
+      _type: boolean
+    nickname:
+      _type: string
+    optionlevel:
+      _type: integer
+    shaed:
+      _type: boolean
+    stocktrading:
+      _type: boolean
+  disabled:
+    _type: boolean
+  resetpassword:
+    _type: boolean
+  resettradingpassword:
+    _type: boolean
+  userprofile:
+    entry:
+      - primaryFirstName
+      - primaryMiddleInitial
+      - primaryLastName
+      - login_id
+      - zip
+      - rtq
+      - emailAddress1
+      - expireMins
+      - defaultAccount
+      - useTradingPassword

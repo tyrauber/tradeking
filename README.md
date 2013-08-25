@@ -47,11 +47,11 @@ With valid a valid consumer_token and consumer secret:
 TradeKing::Client.new() will return a client instance with a consumer object.
 
 #### 1. @client.authorize()
-##### params: oauth_token, oauth_secret
+##### params: access_token, access_token_secret
 
-Using a valid client, and with a valid oauth_token and oauth_secret:
+Using a valid client, and with a valid access_token and access_token_secret:
 
-    @client.authorize({ oauth_token: "OAuth Token", oauth_secret: "Oauth Secret" })
+    @client.authorize({ access_token: "OAuth Token", access_token_secret: "Oauth Secret" })
 
 @client.login() will return the client instance, now with an access token, which will enable queries on behalf of the oauth user.
 

@@ -1,0 +1,45 @@
+asksz:
+	payload: Quote	
+	description: Size of latest ask (in 100's)
+bid:
+  payload: Quote	
+  description: Size of latest bid (in 100's)
+bidsz:
+  payload: Quote	
+  description: Size of latest bid (in 100's)
+datetime:
+  payload: Quote	
+  description: Trade	Date and time
+exch:	
+  payload: Quote	
+  description: Trade	exchange code
+hi:
+  payload: Trade
+  description: High Trade Price for the trading day
+last:
+  payload: Trade
+  description: Last trade price
+lo:	
+  payload: Trade
+  description:	Low Trade Price for the trading day
+opn:
+    payload: Trade
+    description: Open trade price
+qcond:
+    payload: Quote
+    description: Condition code of quote
+symbol:
+    payload: Quote
+    description: Symbol from data provider
+tcond:
+    payload: Trade
+    description: Trade condition code – (H) halted or (R) resumed
+timestamp:
+    payload: Quote
+    description: Trade	Timestamp
+cvol:
+    payload: Trade
+    description: Cumulative volume
+vwap:
+    payload: Trade
+    description: Volume weighted average price

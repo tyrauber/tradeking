@@ -1,7 +1,6 @@
 module TradeKing
   class Watchlist < Request
 
-    PATH = "watchlists"
     attr_accessor :id, :options, :client, :path, :lists, :items, :request_path
     #has_many :symbols
 
@@ -13,6 +12,10 @@ module TradeKing
     
     class << self
       attr_accessor :request_path
+    end
+    
+    def self.path
+      "watchlists"
     end
 
     def add(symbols=[])

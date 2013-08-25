@@ -6,14 +6,21 @@ module TradeKing
     require 'json'
     require 'active_support/core_ext/string'
     require "active_support/core_ext/numeric/time"
-
-    attr_accessor :request_params, :base_uri, :consumer_key, :consumer_secret, :oauth_token, :oauth_secret, :request_path
+    # require 'em-http'
+    # require 'em-http/middleware/oauth'
+    # require 'em-http/middleware/json_response'
+    # require 'pp'
+    # require 'yajl/http_stream'
+    # require 'simple_oauth'
+    
+    attr_accessor :request_params, :base_uri, :consumer_key, :consumer_secret, :access_token, :access_token_secret, :request_path, :discrepancy_in_seconds
 
     API_VERSION = "1"
     DEFAULT_BASE_URI = "https://api.tradeking.com"
-
+    $seconds_offset=0
+    
     class << self
-      attr_accessor :api_base_uri, :consumer_key, :consumer_secret, :oauth_token, :oauth_secret, :request_path
+      attr_accessor :api_base_uri, :consumer_key, :consumer_secret, :access_token, :access_token_secret, :request_path
 
       def configure
         yield self
@@ -27,16 +34,15 @@ module TradeKing
       @consumer_secret = opts[:consumer_secret] || config_consumer_secret
       @request_params = opts[:request_params] || {}
       @request_path = []
-
       raise ArgumentError, "You must have a valid consumer_key and consumer_secret" unless @consumer_key.present? && @consumer_secret.present?
       get_consumer(@consumer_key, @consumer_secret)
-      authorize(opts) if opts[:oauth_token] && opts[:oauth_secret]
+      authorize(opts) if opts[:access_token] && opts[:access_token_secret]
     end
     
     def authorize(opts={})
-      @oauth_token = opts[:oauth_token] || config_oauth_token
-      @oauth_secret = opts[:oauth_secret] || config_oauth_secret
-      get_oauth_token(@oauth_token, @oauth_secret) if @oauth_token && @oauth_secret
+      @access_token = opts[:access_token] || config_access_token
+      @access_token_secret = opts[:access_token_secret] || config_access_token_secret
+      get_access_token(@access_token, @access_token_secret) if @access_token && @access_token_secret
     end
 
     def default_options
@@ -58,12 +64,21 @@ module TradeKing
       self.class.consumer_secret || ENV['TRADEKING_CONSUMER_SECRET']
     end
     
-    def config_oauth_token
-      self.class.oauth_token || ENV['TRADEKING_OAUTH_TOKEN']
+    def config_access_token
+      self.class.access_token || ENV['TRADEKING_OAUTH_TOKEN']
     end
     
-    def config_oauth_secret
-      self.class.oauth_secret || ENV['TRADEKING_OAUTH_SECRET']
+    def config_access_token_secret
+      self.class.access_token_secret || ENV['TRADEKING_OAUTH_SECRET']
+    end
+    
+    def oauth_config
+      {
+        :consumer_key     => consumer_key,
+        :consumer_secret  => consumer_secret,
+        :access_token     => access_token,
+        :access_token_secret => access_token_secret
+      }
     end
 
     # Perform an HTTP GET request
@@ -86,6 +101,27 @@ module TradeKing
       perform(:delete, path, params)
     end
 
+    def stream(url, params={})
+      params = params.to_params
+      url = [url, params].join("?")
+      puts url.inspect
+      EM.run do
+        conn = EventMachine::HttpRequest.new(url)
+        conn.use EventMachine::Middleware::OAuth, oauth_config
+
+         http = conn.get
+         http.stream { |chunk| puts chunk }
+
+         http.errback do
+           puts "error back"
+           EM.stop
+         end
+
+         trap("INT")  { http.close; EM.stop }
+         trap("TERM") { http.close; EM.stop }
+       end
+    end
+
     def resource(name)
       klass_string = "TradeKing::#{name.to_s.singularize.classify}"
       klass_string.constantize rescue name
@@ -99,8 +135,7 @@ module TradeKing
     
     def synchronized_time
       # Important! Must be within 10 seconds of API clock at time of request.
-      # Thier clock is 5 minutes and 19 seconds behind utc.
-      (Time.now - 5.minutes - 19.seconds).in_time_zone(-5).to_i.to_s
+      (Time.now - $seconds_offset.seconds).in_time_zone(-5).to_i.to_s
     end
 
     def get_consumer(consumer_key, consumer_secret, options={})
@@ -110,22 +145,24 @@ module TradeKing
       return consumer
     end
     
-    def get_oauth_token(oauth_token=nil,oauth_secret=nil)
-      token = OAuth::AccessToken.new(@consumer,oauth_token,oauth_secret) if oauth_token && oauth_secret
+    def get_access_token(access_token=nil,access_token_secret=nil)
+      token = OAuth::AccessToken.new(@consumer,access_token,access_token_secret) if access_token && access_token_secret
       self.class.__send__(:attr_accessor, :token)
       self.instance_variable_set("@token", token)
+      $seconds_offset = (Time.now.in_time_zone(-5).to_i - market.clock["unixtime"].to_i) if !!($seconds_offset==0)
       return token
       raise ArgumentError, "You must have a valid token and secret"
     end
     
-    def get_request_token(oauth_token=nil,oauth_secret=nil)
-      return OAuth::RequestToken.new(get_consumer, oauth_token, oauth_secret) if oauth_token && oauth_secret
+    def get_request_token(access_token=nil,access_token_secret=nil)
+      return OAuth::RequestToken.new(get_consumer, access_token, access_token_secret) if access_token && access_token_secret
       raise ArgumentError, "You must have a valid token and secret"
     end
 
     def perform(method, url, params={})
       url = "/v#{API_VERSION}/#{url}.json"
       token.consumer.options[:timestamp] = synchronized_time
+      if method.to_s == 'get' && !params.empty?; url = url+"?#{params.to_params}"; params = {}; end
       response = token.send(method, url, params)
       raise ArgumentError, "Invalid Request" unless response.code == '200'
       response = JSON.parse(response.body)["response"]

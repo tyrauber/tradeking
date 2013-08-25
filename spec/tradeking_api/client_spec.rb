@@ -47,16 +47,16 @@ describe TradeKing::Client do
     it 'should be valid' do
       lambda {
         client.authorize({
-           oauth_token: TRADEKING_OAUTH_TOKEN,
-           oauth_secret: TRADEKING_OAUTH_SECRET
+           access_token: TRADEKING_OAUTH_TOKEN,
+           access_token_secret: TRADEKING_OAUTH_SECRET
          })
       }.should_not raise_error
     end
 
     it 'should have valid token' do
       client.authorize({
-        oauth_token: TRADEKING_OAUTH_TOKEN,
-        oauth_secret: TRADEKING_OAUTH_SECRET
+        access_token: TRADEKING_OAUTH_TOKEN,
+        access_token_secret: TRADEKING_OAUTH_SECRET
       })
       client.token.token.should_not be_nil
       client.token.secret.should_not be_nil

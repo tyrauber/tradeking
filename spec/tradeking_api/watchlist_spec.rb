@@ -5,8 +5,8 @@ describe TradeKing::Watchlist do
     TradeKing::Client.new({
       consumer_key: TRADEKING_CONSUMER_KEY,
       consumer_secret: TRADEKING_CONSUMER_SECRET,
-      oauth_token: TRADEKING_OAUTH_TOKEN,
-      oauth_secret: TRADEKING_OAUTH_SECRET
+      access_token: TRADEKING_OAUTH_TOKEN,
+      access_token_secret: TRADEKING_OAUTH_SECRET
     })
   }
   let(:id){ 'test-list' }
@@ -26,7 +26,7 @@ describe TradeKing::Watchlist do
     end
 
     it "should contain Watchlist Instance" do
-       watchlist.first.should be_an_instance_of(TradeKing::Watchlist)
+      watchlist.first.should be_an_instance_of(TradeKing::Watchlist)
     end
   end
 
